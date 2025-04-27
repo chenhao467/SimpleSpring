@@ -1,4 +1,4 @@
-package com.olink.common.springclass;
+package com.olink.common.spring;
 
 import lombok.Data;
 

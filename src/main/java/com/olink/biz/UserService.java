@@ -1,4 +1,4 @@
-package com.olink.biz.service;
+package com.olink.biz;
 
 import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;

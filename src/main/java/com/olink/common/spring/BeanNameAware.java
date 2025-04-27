@@ -1,4 +1,4 @@
-package com.olink.common.annotation;
+package com.olink.common.spring;
 
 public interface BeanNameAware {
     public void setBeanName(String beanName);

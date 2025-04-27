@@ -1,4 +1,4 @@
-package com.olink.common.annotation;
+package com.olink.common.spring;
 
 /*
 *功能：

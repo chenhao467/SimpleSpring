@@ -1,7 +1,7 @@
-package com.olink.biz.service;
+package com.olink.biz;
 
-import com.olink.common.annotation.BeanNameAware;
-import com.olink.common.annotation.InitiallizingBean;
+import com.olink.common.spring.BeanNameAware;
+import com.olink.common.spring.InitiallizingBean;
 import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
 

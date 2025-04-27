@@ -7,6 +7,9 @@
     <groupId>com.olink</groupId>
     <artifactId>MySpring</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -20,6 +23,50 @@
             <version>1.18.30</version> <!-- 这是最新版，2025年 -->
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version> <!-- 也可以用 3.1.0 或 3.0.1 -->
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>9.0.85</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <version>9.0.85</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.16</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.55</version>
+        </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <!-- Maven WAR 插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <!-- 配置 WAR 文件的输出目录 -->
+                    <outputDirectory>D:\libraries\apache-tomcat-10.1.24\webapps</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -1,20 +1,18 @@
 package com.olink.common.context;
 
-import com.olink.common.springclass.BeanDefinition;
-import com.olink.common.annotation.BeanNameAware;
-import com.olink.common.springclass.BeanPostProcessor;
-import com.olink.common.annotation.InitiallizingBean;
-import com.olink.common.annotation.Autowired;
-import com.olink.common.annotation.Component;
-import com.olink.common.annotation.ComponentScan;
-import com.olink.common.annotation.Scope;
+import com.olink.biz.DispatcherServlet;
+import com.olink.common.annotation.*;
+import com.olink.common.spring.*;
 
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,14 +22,20 @@ import java.util.concurrent.ConcurrentHashMap;
  作者：chenhao
 *日期： 2025/4/26 下午1:28
 */
+
 public class MyApplicationContext {
     private Class configClass;
     private ConcurrentHashMap<String,Object> singletonObjects = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
     private List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
+
+
+
     public MyApplicationContext(Class configClass) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         this.configClass = configClass;
-        scan(configClass);
+        ComponentScan componentScanAnnotation = (ComponentScan) configClass.getDeclaredAnnotation(ComponentScan.class);
+        String path = componentScanAnnotation.value();
+        scan(path);
         for(Map.Entry<String,BeanDefinition> entry: beanDefinitionMap.entrySet()){
             String beanName = entry.getKey();
             BeanDefinition beandefinition = entry.getValue();
@@ -42,9 +46,8 @@ public class MyApplicationContext {
         }
 
     }
-    public void scan(Class configClass) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        ComponentScan componentScanAnnotation = (ComponentScan) configClass.getDeclaredAnnotation(ComponentScan.class);
-        String path = componentScanAnnotation.value();
+    public void scan(String path) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+
         path = path.replace(".", "/");
         ClassLoader classLoader = this.getClass().getClassLoader();
         URL resource = classLoader.getResource(path);
@@ -59,10 +62,10 @@ public class MyApplicationContext {
                     try {
                         Class<?> clazz = classLoader.loadClass(className);
                         if (clazz.isAnnotationPresent(Component.class)) {
-                            //BeanPostProcessor加入容器
-                            if(BeanPostProcessor.class.isAssignableFrom(clazz)){
-                                BeanPostProcessor instance  = (BeanPostProcessor) clazz.getDeclaredConstructor().newInstance();
-                                beanPostProcessorList.add(instance);
+                            //自定义BeanPostProcessor加入容器
+                            Object instance = clazz.getDeclaredConstructor().newInstance();
+                            if(instance instanceof BeanPostProcessor){
+                                beanPostProcessorList.add((BeanPostProcessor) instance);
                             }
 
                             Component annotation = clazz.getDeclaredAnnotation(Component.class);
@@ -105,36 +108,39 @@ public class MyApplicationContext {
             String beanName = lowerFirstChar(clazz.getSimpleName());
             singletonObjects.put(beanName,instance);
             //依赖注入
-
+            Object bean = null;
             for(Field declaredField : clazz.getDeclaredFields()){
+
                 if(declaredField.isAnnotationPresent(Autowired.class)){
-                    Object bean = getBean(declaredField.getName());
+                    bean = getBean(declaredField.getName());
                     declaredField.setAccessible(true);
                     declaredField.set(instance,bean);
-
-                    //Aware回调方法
-                    if(instance instanceof BeanNameAware){
-                        String A = ((BeanNameAware) instance).getBeanName(instance);
-                        String B = bean.getClass().getSimpleName();
-                        System.out.println("成功给"+A+"赋值"+B);
-
-                    }
-                    //BeanPostProcessor前置
-                    for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
-                        instance = beanPostProcessor.before(instance,beanName);
-                    }
-
-                    //初始化逻辑
-                    if(instance instanceof InitiallizingBean){
-                        ((InitiallizingBean) instance).afterPropertiesSet();
-                    }
-
-                    //BeanPostProcessor后置
-                    for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
-                        instance = beanPostProcessor.after(instance,beanName);
-                    }
                 }
             }
+            //Aware回调方法
+            if(instance instanceof BeanNameAware){
+                String A = ((BeanNameAware) instance).getBeanName(instance);
+                String B = bean.getClass().getSimpleName();
+                System.out.println("成功给"+A+"赋值"+B);
+
+            }
+            //BeanPostProcessor前置
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                instance = beanPostProcessor.before(instance,beanName);
+            }
+            // 执行 @PostConstruct 注解的方法
+            invokePostConstructMethods(instance);
+            //初始化逻辑
+            if(instance instanceof InitiallizingBean){
+                ((InitiallizingBean) instance).afterPropertiesSet();
+            }
+
+
+            //BeanPostProcessor后置
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                instance = beanPostProcessor.after(instance,beanName);
+            }
+
             return instance;
         }catch (InstantiationException e){
             e.printStackTrace();
@@ -144,6 +150,8 @@ public class MyApplicationContext {
             e.printStackTrace();
         }catch (NoSuchMethodException e){
             e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return null;
     }
@@ -155,5 +163,25 @@ public class MyApplicationContext {
         chars[0] = Character.toLowerCase(chars[0]);
         return new String(chars);
     }
+    public List<Object> values(){
+        List<Object> list = new ArrayList<>();
+        for(Map.Entry<String,BeanDefinition> entry: beanDefinitionMap.entrySet()){
+            String beanName = entry.getKey();
+            Object bean = getBean(beanName);
+            list.add(bean);
+        }
+        return list;
+    }
+    private void invokePostConstructMethods(Object instance) throws Exception {
+        // 获取所有的方法
+        Method[] methods = instance.getClass().getDeclaredMethods();
 
+        for (Method method : methods) {
+            // 如果方法上有 @PostConstruct 注解
+            if (method.isAnnotationPresent(PostConstruct.class)) {
+                method.setAccessible(true); // 确保可以访问私有方法
+                method.invoke(instance); // 执行该方法
+            }
+        }
+}
 }
