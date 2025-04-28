@@ -3,7 +3,6 @@ package com.olink.biz;
 import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
 import com.olink.common.context.MyApplicationContext;
-import com.olink.common.spring.DispatcherServlet;
 import lombok.Data;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;

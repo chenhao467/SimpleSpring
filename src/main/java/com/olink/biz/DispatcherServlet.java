@@ -5,7 +5,6 @@ import com.alibaba.fastjson2.JSONObject;
 import com.olink.common.annotation.*;
 import com.olink.common.spring.BeanPostProcessor;
 import com.olink.common.spring.ControllerMethodMapping;
-import com.olink.common.spring.DispatcherServlet;
 import com.olink.common.spring.ModelAndView;
 
 import javax.servlet.Servlet;
@@ -22,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component("dispatcherServlet")
-public class DispatcherServletImpl extends HttpServlet implements BeanPostProcessor, DispatcherServlet, Servlet {
+public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,Servlet {
 
     public static Map<String, ControllerMethodMapping> handlerMapping = new HashMap<>();
 
