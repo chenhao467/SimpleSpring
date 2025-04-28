@@ -23,7 +23,7 @@ import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Component("dispatcherServlet")
 public class DispatcherServlet extends HttpServlet implements BeanPostProcessor {
 
     public static Map<String, ControllerMethodMapping> handlerMapping = new HashMap<>();
@@ -122,6 +122,7 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor 
                     RequestMapping methodrm = declaredMethod.getAnnotation(RequestMapping.class);
                     String key = url.concat(methodrm.value());
                     ControllerMethodMapping handler = new ControllerMethodMapping(bean, declaredMethod);
+                    //根据传入的method解析出resultType
                    if(handlerMapping.containsKey(key)){
                        throw new RuntimeException("url重复"+ key);
                    }

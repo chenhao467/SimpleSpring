@@ -7,6 +7,7 @@ import com.olink.common.spring.*;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -105,8 +106,15 @@ public class MyApplicationContext {
             Object instance = clazz.getDeclaredConstructor().newInstance();
 
             //提前加入到singleton池子里
-            String beanName = lowerFirstChar(clazz.getSimpleName());
-            singletonObjects.put(beanName,instance);
+            // 修改单例池注册逻辑，优先读取注解中的名称
+             Component component = (Component) clazz.getAnnotation(Component.class);
+             String value = component.value();
+             String beanName = clazz.isAnnotationPresent(Component.class)
+                    ? value// 读取注解中的名称
+                    : lowerFirstChar(clazz.getSimpleName());
+            singletonObjects.put(beanName, instance);
+
+
             //依赖注入
             Object bean = null;
             for(Field declaredField : clazz.getDeclaredFields()){
@@ -138,6 +146,8 @@ public class MyApplicationContext {
 
             //BeanPostProcessor后置
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                //对bean进行增强操作 其中(url,handler)就是在这里被加入到handlerMapping中
+                // handler:(bean,method)
                 instance = beanPostProcessor.after(instance,beanName);
             }
 

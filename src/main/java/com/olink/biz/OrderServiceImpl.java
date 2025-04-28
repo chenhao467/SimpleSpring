@@ -4,6 +4,8 @@ import com.olink.common.spring.BeanNameAware;
 import com.olink.common.spring.InitiallizingBean;
 import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
+import com.olink.common.spring.OrderService;
+import com.olink.common.spring.UserService;
 
 /*
 *功能：
@@ -11,7 +13,7 @@ import com.olink.common.annotation.Component;
 *日期： 2025/4/26 下午3:34
 */
 @Component("orderService")
-public class OrderService implements BeanNameAware, InitiallizingBean {
+public class OrderServiceImpl implements BeanNameAware, InitiallizingBean, OrderService {
     @Autowired
     private UserService userService;
 
@@ -21,7 +23,6 @@ public class OrderService implements BeanNameAware, InitiallizingBean {
 
     @Override
     public void setBeanName(String beanName) {
-
     }
 
     @Override
