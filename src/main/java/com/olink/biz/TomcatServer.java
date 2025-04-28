@@ -3,11 +3,13 @@ package com.olink.biz;
 import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
 import com.olink.common.context.MyApplicationContext;
+import com.olink.common.spring.DispatcherServlet;
 import lombok.Data;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.Servlet;
 import java.io.File;
 import java.io.IOException;
 
@@ -21,7 +23,7 @@ import java.io.IOException;
 @Data
 public class TomcatServer {
     @Autowired
-    private DispatcherServlet dispatcherServlet;
+    private Servlet dispatcherServlet;
 
     @PostConstruct
     public void start() throws LifecycleException {

@@ -3,15 +3,13 @@ package com.olink.biz;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.olink.common.annotation.*;
-import com.olink.common.config.AppConfig;
-import com.olink.common.context.MyApplicationContext;
 import com.olink.common.spring.BeanPostProcessor;
 import com.olink.common.spring.ControllerMethodMapping;
+import com.olink.common.spring.DispatcherServlet;
 import com.olink.common.spring.ModelAndView;
 
-import javax.annotation.PostConstruct;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component("dispatcherServlet")
-public class DispatcherServlet extends HttpServlet implements BeanPostProcessor {
+public class DispatcherServletImpl extends HttpServlet implements BeanPostProcessor, DispatcherServlet, Servlet {
 
     public static Map<String, ControllerMethodMapping> handlerMapping = new HashMap<>();
 

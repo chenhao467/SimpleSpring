@@ -1,6 +1,5 @@
 package com.olink.common.annotation;
 
-import com.olink.biz.DispatcherServlet;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
