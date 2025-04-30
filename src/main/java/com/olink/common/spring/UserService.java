@@ -1,5 +1,9 @@
 package com.olink.common.spring;
 
-public interface UserService {
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface UserService{
     public void test();
+
+    String getUserNameById(String id);
 }
