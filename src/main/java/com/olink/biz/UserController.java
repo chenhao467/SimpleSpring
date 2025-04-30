@@ -44,8 +44,7 @@ public class UserController {
 
     @RequestMapping("/get")
     public String getUserNameById(@Param("id") String id){
-        String name = userService.getUserNameById(id);
-        return name;
+       String name  = userService.getUserNameById(id);
+       return name;
     }
-
 }

@@ -1,13 +1,10 @@
 package com.olink.biz;
 
-import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
 import com.olink.common.annotation.Transactional;
-import com.olink.common.spring.OrderService;
 import com.olink.common.spring.TransactionManager;
 import com.olink.common.spring.UserService;
 import lombok.Data;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,8 +17,7 @@ import java.sql.ResultSet;
 @Data
 @Component("userService")
 public class UserServiceImpl implements UserService  {
-    @Autowired
-    private OrderService orderService;
+
     public void test(){
         System.out.println("hello Spring!");
     }
@@ -43,6 +39,5 @@ public class UserServiceImpl implements UserService  {
         }
         return name;
     }
-
 
 }

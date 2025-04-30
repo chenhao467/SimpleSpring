@@ -4,6 +4,7 @@ import com.olink.common.annotation.Component;
 import com.olink.common.annotation.Transactional;
 import com.olink.common.config.ConnectionManager;
 import com.olink.common.spring.BeanPostProcessor;
+import com.olink.common.spring.TransactionalInvocationHandler;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -29,25 +30,11 @@ public class MyBeanPostProcessor implements BeanPostProcessor {
         Class<?> clazz = bean.getClass();
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Transactional.class)) {
-                  Object proxyInstance = Proxy.newProxyInstance(bean.getClass().getClassLoader(), bean.getClass().getInterfaces(), new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        System.out.println("代理逻辑");
-                        Object result;
-                        try {
-                            ConnectionManager.begin();
-                            result = method.invoke(bean, args);
-                            ConnectionManager.commit();
-                        } catch (Exception e) {
-                            ConnectionManager.rollback();
-                            throw e;
-                        } finally {
-                            ConnectionManager.closeConnection();
-                        }
-                        return result;
-                    }
-                });
-                  return proxyInstance;
+                return Proxy.newProxyInstance(
+                        bean.getClass().getClassLoader(),
+                        bean.getClass().getInterfaces(),
+                        new TransactionalInvocationHandler(bean)
+                );
             }
         }
 
@@ -57,16 +44,6 @@ public class MyBeanPostProcessor implements BeanPostProcessor {
          * 当调用代理对象的某个方法时，实际的执行逻辑会被 InvocationHandler.invoke() 方法处理
          *
          */
-//
-//        return Proxy.newProxyInstance(bean.getClass().getClassLoader(), bean.getClass().getInterfaces(), new InvocationHandler() {
-//            @Override
-//
-//
-//            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-//                System.out.println("执行代理逻辑");
-//                return method.invoke(bean,args);
-//            }
-//        });
         return bean;
         }
 

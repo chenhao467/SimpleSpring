@@ -44,8 +44,8 @@ public class MyApplicationContext {
                 singletonObjects.put(beanName,bean);
             }
         }
-
     }
+
     public void scan(String path) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
         path = path.replace(".", "/");
@@ -192,5 +192,5 @@ public class MyApplicationContext {
                 method.invoke(instance); // 执行该方法
             }
         }
-}
+    }
 }
