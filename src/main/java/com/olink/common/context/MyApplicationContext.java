@@ -62,10 +62,14 @@ public class MyApplicationContext {
                         Class<?> clazz = classLoader.loadClass(className);
                         if (clazz.isAnnotationPresent(Component.class)) {
                             //自定义BeanPostProcessor加入容器
-                            Object instance = clazz.getDeclaredConstructor().newInstance();
-                            if(instance instanceof BeanPostProcessor){
-                                beanPostProcessorList.add((BeanPostProcessor) instance);
+                            if(!clazz.isInterface()){
+                                Object instance = clazz.getDeclaredConstructor().newInstance();
+                                if(instance instanceof BeanPostProcessor){
+                                    beanPostProcessorList.add((BeanPostProcessor) instance);
+                                }
+
                             }
+
 
                             Component annotation = clazz.getDeclaredAnnotation(Component.class);
                             String beanName = annotation.value();
@@ -76,7 +80,6 @@ public class MyApplicationContext {
                                 beanDefinition.setScope(scopeAnnotation.value());
                             } else {
                                 beanDefinition.setScope("singleton");
-
                             }
                             beanDefinitionMap.put(beanName,beanDefinition);
                         }
@@ -101,6 +104,7 @@ public class MyApplicationContext {
     public Object createBean(BeanDefinition beanDefinition){
         Class clazz = beanDefinition.getClazz();
         try {
+
             Object instance = clazz.getDeclaredConstructor().newInstance();
 
             //提前加入到singleton池子里

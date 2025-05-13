@@ -1,5 +1,6 @@
 package com.olink.bean;
 
+import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
 import com.olink.common.annotation.Transactional;
 import com.olink.common.spring.TransactionManager;
@@ -9,8 +10,6 @@ import lombok.Data;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 /*
 *功能：
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 */
 @Data
 @Component("userService")
-public class UserServiceImpl implements UserService  {
+public class UserServiceImpl  implements UserService{
 
     public void test(){
         System.out.println("hello Spring!");
@@ -47,21 +46,12 @@ public class UserServiceImpl implements UserService  {
     @Transactional
     public String AddUserName(User user) {
         try (Connection conn = TransactionManager.getConnection()) {
-            String sql = "INSERT INTO truck_user (id, phone, password,create_time,enabled) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setLong(1, user.getId());
-            ps.setString(2, user.getPhone());
-            ps.setString(3, user.getPassword());
-            ps.setTimestamp(4, Timestamp.valueOf("2025-04-01 10:21:30"));
-            ps.setLong(5, 1);
-
-            int rows = ps.executeUpdate();
-            return rows > 0 ? "添加成功" : "添加失败";
 
         } catch (Exception e) {
             e.printStackTrace();
             return "添加异常：" + e.getMessage();
         }
+        return "添加成功";
     }
 
 
