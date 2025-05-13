@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.lang.reflect.Method;
-@Getter
+@Data
 public class ControllerMethodMapping {
         private final Object controller;
         private final Method method;
