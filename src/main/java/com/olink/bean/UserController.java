@@ -1,15 +1,10 @@
-package com.olink.biz;
+package com.olink.bean;
 
-import com.baomidou.mybatisplus.core.injector.methods.SelectById;
 import com.olink.common.annotation.*;
 import com.olink.common.spring.ModelAndView;
-import com.olink.common.spring.TransactionManager;
-import com.olink.common.spring.User;
-import com.olink.common.spring.UserService;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import com.olink.common.spring.UserService;
+import com.olink.entity.User;
 
 /*
 *功能：
@@ -32,8 +27,8 @@ public class UserController {
     @ResponseBody
     public User Json(@Param("name")String name, @Param("age")Integer age){
         User user = new User();
-        user.setAge(age);
-        user.setName(name);
+        user.setPhone("123");
+        user.setPassword("123");
         return user;
     }
     @RequestMapping("/html")
@@ -46,5 +41,11 @@ public class UserController {
     public String getUserNameById(@Param("id") String id){
        String name  = userService.getUserNameById(id);
        return name;
+    }
+    @RequestMapping("/insert")
+    @ResponseBody
+    public String AddUser(@RequestBody User user){
+        return userService.AddUserName(user);
+
     }
 }

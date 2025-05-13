@@ -14,7 +14,7 @@ public class TransactionalInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        System.out.println("代理逻辑");
+        System.out.println("事务代理逻辑");
         Object result;
         try {
             ConnectionManager.begin();

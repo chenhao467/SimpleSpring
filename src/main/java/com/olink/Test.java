@@ -2,9 +2,12 @@ package com.olink;
 
 import com.olink.common.config.AppConfig;
 import com.olink.common.context.MyApplicationContext;
-import com.olink.biz.OrderServiceImpl;
+import com.olink.common.spring.TransactionManager;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 
 /*
 *功能：
@@ -18,5 +21,6 @@ public class Test {
 //        orderService.test();
 //        UserService userService=new UserService();
 //        userService.test();
+
     }
 }

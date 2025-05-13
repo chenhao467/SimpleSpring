@@ -1,6 +1,7 @@
 
-package com.olink.biz;
+package com.olink.bean;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.olink.common.annotation.*;
 import com.olink.common.spring.BeanPostProcessor;
@@ -12,8 +13,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -61,6 +64,10 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
         }
 
 
@@ -74,28 +81,61 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
 
     }
 
-    private Object[] resolveArgs(HttpServletRequest req, Method method) {
+    private Object[] resolveArgs(HttpServletRequest req, Method method) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         Parameter[] parameters = method.getParameters();
-        Object[]args = new Object[parameters.length];
+        Object[] args = new Object[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             String value = null;
             Param param = parameter.getAnnotation(Param.class);
-            if(param!=null){
+            if (param != null) {
                 value = req.getParameter(param.value());
-            }else{
+            } else {
                 value = req.getParameter(parameter.getName());
             }
             Class<?> parameterType = parameter.getType();
-            if (String.class.isAssignableFrom(parameterType)){
-                args[i] = value;
-            }else if (Integer.class.isAssignableFrom(parameterType)){
-                args[i] = Integer.parseInt(value);
-            } else{
-                args[i] = null;
+
+            // 如果参数带有 @RequestBody 注解，说明要从请求体中解析 JSON
+            if (parameter.isAnnotationPresent(RequestBody.class)) {
+                StringBuilder jsonBuilder = new StringBuilder();
+                BufferedReader reader = req.getReader();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    jsonBuilder.append(line);
+                }
+                String json = jsonBuilder.toString();
+
+                // 使用 fastjson 或 jackson 反序列化
+                Object paramObj = JSON.parseObject(json, parameterType); // fastjson 示例
+                args[i] = paramObj;
             }
+            // 如果是基本类型
+            else if (parameterType == String.class || parameterType == Integer.class || parameterType == Long.class) {
+                String baseval = null;
+                Param parm = parameter.getAnnotation(Param.class);
+                if (parm != null) {
+                    value = req.getParameter(parm.value());
+                } else {
+                    value = req.getParameter(parameter.getName());
+                }
+                args[i] = convertType(value, parameterType.getSimpleName());
+            }
+
         }
         return args;
+    }
+
+    private Object convertType(String value, String basetype) {
+
+        if(basetype.equals("String")){
+            return value;
+        }else if(basetype.equals("Integer")){
+            return Integer.parseInt(value);
+        }else if(basetype.equals("Long")){
+            return Long.parseLong(value);
+        }else{
+            return null;
+        }
     }
 
     public ControllerMethodMapping find(HttpServletRequest req){

@@ -1,12 +1,10 @@
-package com.olink.biz;
+package com.olink.bean;
 
 import com.olink.common.annotation.Component;
 import com.olink.common.annotation.Transactional;
-import com.olink.common.config.ConnectionManager;
 import com.olink.common.spring.BeanPostProcessor;
 import com.olink.common.spring.TransactionalInvocationHandler;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 

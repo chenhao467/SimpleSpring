@@ -1,4 +1,4 @@
-package com.olink.biz;
+package com.olink.bean;
 
 import com.olink.common.spring.BeanNameAware;
 import com.olink.common.spring.InitiallizingBean;
