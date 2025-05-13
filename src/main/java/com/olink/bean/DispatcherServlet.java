@@ -4,6 +4,7 @@ package com.olink.bean;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.olink.common.annotation.*;
+import com.olink.common.annotation.requestMapping.*;
 import com.olink.common.spring.BeanPostProcessor;
 import com.olink.common.spring.ControllerMethodMapping;
 import com.olink.common.spring.ModelAndView;
@@ -16,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -36,6 +36,12 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
             resp.getWriter().write("<h1>404,你的请求没有对应的Controller</h1><br>");
             return;
         }
+
+        if(!req.getMethod().equals(handler.getHttpMethod())){
+            throw new RuntimeException("请求方法不匹配");
+        }
+
+
         try {
             Object controller = handler.getController();
             Object[] args = resolveArgs(req,handler.getMethod());
@@ -148,25 +154,47 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
 
     @Override
     public Object after(Object bean, String beanName) {
-        if (!bean.getClass().isAnnotationPresent(Controller.class)){
+        if (!bean.getClass().isAnnotationPresent(Controller.class)) {
             return bean;
         }
-        RequestMapping classrm = bean.getClass().getAnnotation(RequestMapping.class);
-        String url = classrm!=null?classrm.value():"";  //根据类的RequestMapping注解值获取类的url
-            Method[] declaredMethods = bean.getClass().getDeclaredMethods();
-            for (Method declaredMethod : declaredMethods) {
-                if(declaredMethod.isAnnotationPresent(RequestMapping.class)){
-                    RequestMapping methodrm = declaredMethod.getAnnotation(RequestMapping.class);
-                    String key = url.concat(methodrm.value());
-                    ControllerMethodMapping handler = new ControllerMethodMapping(bean, declaredMethod);
-                    //根据传入的method解析出resultType
-                   if(handlerMapping.containsKey(key)){
-                       throw new RuntimeException("url重复"+ key);
-                   }
-                    handlerMapping.put(key,handler);
-                }
+
+        RequestMapping classMapping = bean.getClass().getAnnotation(RequestMapping.class);
+        String baseUrl = classMapping != null ? classMapping.value() : "";
+
+        for (Method method : bean.getClass().getDeclaredMethods()) {
+            String path = null;
+            String httpMethod = null;
+
+            if (method.isAnnotationPresent(RequestMapping.class)) {
+                path = method.getAnnotation(RequestMapping.class).value();
+                httpMethod = ""; // 默认通用
+            } else if (method.isAnnotationPresent(GetMapping.class)) {
+                path = method.getAnnotation(GetMapping.class).value();
+                httpMethod = "GET";
+            } else if (method.isAnnotationPresent(PostMapping.class)) {
+                path = method.getAnnotation(PostMapping.class).value();
+                httpMethod = "POST";
+            } else if (method.isAnnotationPresent(PutMapping.class)) {
+                path = method.getAnnotation(PutMapping.class).value();
+                httpMethod = "PUT";
+            } else if (method.isAnnotationPresent(DeleteMapping.class)) {
+                path = method.getAnnotation(DeleteMapping.class).value();
+                httpMethod = "DELETE";
             }
 
+            // 如果上面五种注解都不存在，就跳过
+            if (path == null) continue;
+
+            String fullUrl = baseUrl + path;
+
+            if (handlerMapping.containsKey(fullUrl)) {
+                throw new RuntimeException("URL重复注册：" + fullUrl);
+            }
+
+            ControllerMethodMapping handler = new ControllerMethodMapping(bean, method, httpMethod);
+            handlerMapping.put(fullUrl, handler);
+        }
         return bean;
     }
+
 }

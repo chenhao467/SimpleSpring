@@ -10,10 +10,12 @@ public class ControllerMethodMapping {
         private final Object controller;
         private final Method method;
         private final ResultType resultType;
-        public ControllerMethodMapping(Object controller, Method method) {
+        private final String httpMethod;
+        public ControllerMethodMapping(Object controller, Method method,String httpMethod) {
             this.controller = controller;
             this.method = method;
             this.resultType = resolveResultType(method);
+            this.httpMethod = httpMethod;
         }
 
         private ResultType resolveResultType(Method method) {

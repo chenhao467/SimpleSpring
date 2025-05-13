@@ -1,6 +1,8 @@
 package com.olink.bean;
 
 import com.olink.common.annotation.*;
+import com.olink.common.annotation.requestMapping.PostMapping;
+import com.olink.common.annotation.requestMapping.RequestMapping;
 import com.olink.common.spring.ModelAndView;
 
 import com.olink.common.spring.UserService;
@@ -42,7 +44,7 @@ public class UserController {
        String name  = userService.getUserNameById(id);
        return name;
     }
-    @RequestMapping("/insert")
+    @PostMapping("/insert")
     @ResponseBody
     public String AddUser(@RequestBody User user){
         return userService.AddUserName(user);

@@ -1,4 +1,4 @@
-package com.olink.common.annotation;
+package com.olink.common.annotation.requestMapping;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
