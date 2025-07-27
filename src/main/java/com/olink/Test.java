@@ -1,5 +1,6 @@
 package com.olink;
 
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.olink.common.config.AppConfig;
 import com.olink.common.context.MyApplicationContext;
 import com.olink.common.spring.TransactionManager;
@@ -16,11 +17,15 @@ import java.sql.Timestamp;
 */
 public class Test {
     public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        new MyApplicationContext(AppConfig.class);
-//        OrderService orderService =(OrderService) context.getBean("orderService");
-//        orderService.test();
-//        UserService userService=new UserService();
-//        userService.test();
-
+        MyApplicationContext context = null;
+        try{
+           context = new MyApplicationContext(AppConfig.class);
+        }catch (Exception e) {
+            throw new RuntimeException(e + "MySpring容器运行出错");
+        }finally {
+            if(ObjectUtils.isNotEmpty(context)){
+                context.shutdown();
+            }
+        }
     }
 }
