@@ -465,7 +465,7 @@ public class MyApplicationContext {
 
     //简单的判断是否匹配
     private boolean isMatch(Object bean, Method method, String pointcutExpression) {
-        String className = bean.getClass().getName();
+        String className = bean.getClass().getSimpleName();
         String methodName = method.getName();
         String signature = className + "." + methodName + "(..)";
         return pointcutExpression.contains(className) && pointcutExpression.contains(methodName);

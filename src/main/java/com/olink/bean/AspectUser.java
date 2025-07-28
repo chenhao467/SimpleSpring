@@ -15,7 +15,7 @@ import com.olink.common.annotation.aop.Before;
 public class AspectUser {
 
 
-    @Before("OrderController")
+    @Before("OrderServiceImpl/getUserNameById")
     public void before(){
         System.out.println("before");
     }

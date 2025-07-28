@@ -19,7 +19,6 @@ import lombok.Data;
 @Component
 @Controller
 @RequestMapping("/order")
-@Data
 public class OrderController{
     @Autowired
     private OrderServiceImpl orderService;
