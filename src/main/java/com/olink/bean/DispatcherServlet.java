@@ -3,9 +3,10 @@ package com.olink.bean;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.olink.common.annotation.*;
 import com.olink.common.annotation.requestMapping.*;
+
+
 import com.olink.common.spring.BeanPostProcessor;
 import com.olink.common.spring.ControllerMethodMapping;
 import com.olink.common.spring.ModelAndView;
@@ -27,7 +28,6 @@ import java.util.Objects;
 
 @Component
 public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,Servlet {
-
     public static Map<String, ControllerMethodMapping> handlerMapping = new HashMap<>();
 
     @Override
@@ -51,7 +51,11 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
             switch (handler.getResultType()){
                 case HTML->{
                     resp.setContentType("text/html");
-                    resp.getWriter().write(result.toString());
+                    if(result!=null){
+                        resp.getWriter().write(result.toString());
+                    }else{
+                        resp.getWriter().write("void");
+                    }
                 }
                 case JSON -> {
                     resp.setContentType("application/json;charset=UTF-8");
@@ -156,14 +160,15 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
 
     @Override
     public Object after(Object bean, String beanName) {
-        if (!bean.getClass().isAnnotationPresent(Controller.class)) {
-            return bean;
+        Class<?> originalClass = getOriginalClass(bean);
+        if (!originalClass.isAnnotationPresent(Controller.class))  {
+           return bean;
         }
 
-        RequestMapping classMapping = bean.getClass().getAnnotation(RequestMapping.class);
+        RequestMapping classMapping = originalClass.getAnnotation(RequestMapping.class);
         String baseUrl = classMapping != null ? classMapping.value() : "";
 
-        for (Method method : bean.getClass().getDeclaredMethods()) {
+        for (Method method : originalClass.getDeclaredMethods()) {
             String path = null;
             String httpMethod = null;
 
@@ -197,6 +202,13 @@ public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,
             handlerMapping.put(fullUrl, handler);
         }
         return bean;
+    }
+    public static Class<?> getOriginalClass(Object bean) {
+        // CGLIB 代理类的判断逻辑
+        if (bean.getClass().getName().contains("$$")) {
+            return bean.getClass().getSuperclass();
+        }
+        return bean.getClass();
     }
 
 }

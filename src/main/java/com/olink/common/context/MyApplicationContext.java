@@ -10,6 +10,8 @@ import com.olink.common.spring.*;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import javax.annotation.PostConstruct;
@@ -30,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 */
 
 public class MyApplicationContext {
+    private static final Logger log = LoggerFactory.getLogger(MyApplicationContext.class);
     private Class configClass;
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(); // 一级缓存：单例池，存放完全初始化好的 bean
     private final Map<String, Object> earlySingletonObjects = new HashMap<>(); // 二级缓存：存放早期 bean 引用
@@ -50,7 +53,6 @@ public class MyApplicationContext {
             BeanDefinition beandefinition = entry.getValue();
             if (beandefinition.getScope().equals("singleton")) {
                 Object bean = createBean(beandefinition);
-                singletonObjects.put(beanName, bean);
             }
         }
     }
@@ -368,7 +370,7 @@ public class MyApplicationContext {
         Class<?> targetClass = bean.getClass();
         for (AdviceDefinition adviceDefinition : aspectDefinition.getAdviceDefinitions()) {
             String pointcutExpression = adviceDefinition.getPointcutExpression();
-            if (pointcutExpression.contains(targetClass.getName())) {
+            if (pointcutExpression.contains(targetClass.getSimpleName())) {
                 return true;
             }
         }
@@ -401,7 +403,7 @@ public class MyApplicationContext {
     private Object createAopProxy(Object bean, AspectDefinition aspectDefinition) throws Exception {
         Class<?> targetClass = bean.getClass();
         Class<?>[] interfaces = targetClass.getInterfaces();
-        if (interfaces.length > 0) {
+        if (targetClass.isInterface()) {
             return java.lang.reflect.Proxy.newProxyInstance(
                     bean.getClass().getClassLoader(),
                     interfaces,
@@ -426,7 +428,7 @@ public class MyApplicationContext {
                         return result;
                     }
             );
-        }// 2. 使用 CGLIB 代理 (如果目标类没有实现接口)
+        }// 2. 使用 CGLIB 代理 (如果目标类不是接口)
         else {
             Enhancer enhancer = new Enhancer();
             enhancer.setSuperclass(targetClass);

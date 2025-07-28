@@ -4,9 +4,12 @@ import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
 import com.olink.common.annotation.Controller;
 import com.olink.common.annotation.Param;
+import com.olink.common.annotation.aop.Aspect;
+import com.olink.common.annotation.aop.Before;
 import com.olink.common.annotation.requestMapping.GetMapping;
 import com.olink.common.annotation.requestMapping.RequestMapping;
 import com.olink.common.spring.OrderService;
+import lombok.Data;
 
 /*
 *功能：
@@ -16,7 +19,8 @@ import com.olink.common.spring.OrderService;
 @Component
 @Controller
 @RequestMapping("/order")
-public class OrderController {
+@Data
+public class OrderController{
     @Autowired
     private OrderServiceImpl orderService;
 
