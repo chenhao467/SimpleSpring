@@ -21,7 +21,7 @@ A Simple Spring For Me
 -- 2.Aop基本功能 
     动态代理方式：
       支持JDK
-      支持CGLIB
+      支持CGLIB代理  -- 意味着我可以注入往字段里注入代理类（因为代理类本质是它的子类）
     Advice类型：
       支持@Before, @After, @AfterReturning, @AfterThrowing
 -- 3.支持事务      
