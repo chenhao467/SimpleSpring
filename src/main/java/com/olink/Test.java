@@ -21,7 +21,7 @@ public class Test {
         try{
            context = new MyApplicationContext(AppConfig.class);
         }catch (Exception e) {
-            throw new RuntimeException(e + "MySpring容器运行出错");
+            throw new RuntimeException(e + "MySpring容器运行出错"+e.getMessage());
         }finally {
             if(ObjectUtils.isNotEmpty(context)){
                 context.shutdown();

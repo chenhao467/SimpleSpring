@@ -13,12 +13,12 @@ import com.olink.common.spring.OrderService;
  作者：chenhao
 *日期： 2025/7/28 下午4:26
 */
-@Component("orderController")
+@Component
 @Controller
 @RequestMapping("/order")
 public class OrderController {
     @Autowired
-    private OrderService orderService;
+    private OrderServiceImpl orderService;
 
     @GetMapping("/get")
     public String getUserNameById(@Param("id") String id){

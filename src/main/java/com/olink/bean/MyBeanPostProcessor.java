@@ -3,7 +3,9 @@ package com.olink.bean;
 import com.olink.common.annotation.Component;
 import com.olink.common.annotation.Transactional;
 import com.olink.common.spring.BeanPostProcessor;
-import com.olink.common.spring.TransactionalInvocationHandler;
+import com.olink.common.proxy.TransactionalInvocationHandler;
+import com.olink.common.proxy.TransactionalMethodInterceptor;
+import net.sf.cglib.proxy.Enhancer;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -26,23 +28,29 @@ public class MyBeanPostProcessor implements BeanPostProcessor {
     public Object after(Object bean, String beanName) {
         System.out.println("初始化后");
         Class<?> clazz = bean.getClass();
+
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Transactional.class)) {
-                return Proxy.newProxyInstance(
-                        bean.getClass().getClassLoader(),
-                        bean.getClass().getInterfaces(),
-                        new TransactionalInvocationHandler(bean)
-                );
+
+                // 优先使用 JDK 动态代理（如果实现了接口）
+                if (clazz.isInterface()) {
+                    return Proxy.newProxyInstance(
+                            clazz.getClassLoader(),
+                            clazz.getInterfaces(),
+                            new TransactionalInvocationHandler(bean)
+                    );
+                } else {
+                    // 否则使用 CGLIB 动态代理
+                    Enhancer enhancer = new Enhancer();
+                    enhancer.setSuperclass(clazz);
+                    enhancer.setCallback(new TransactionalMethodInterceptor(bean));
+                    return enhancer.create();
+                }
             }
         }
 
-        /*
-         * JDK 动态代理：只能代理实现了接口的类。
-         * 容器初始化时，会将所有bean用代理对象替换。
-         * 当调用代理对象的某个方法时，实际的执行逻辑会被 InvocationHandler.invoke() 方法处理
-         *
-         */
         return bean;
-        }
+    }
+
 
 }

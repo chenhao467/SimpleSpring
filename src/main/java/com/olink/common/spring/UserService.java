@@ -1,6 +1,6 @@
 package com.olink.common.spring;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.olink.common.annotation.Component;
 import com.olink.entity.User;
 
 public interface UserService{

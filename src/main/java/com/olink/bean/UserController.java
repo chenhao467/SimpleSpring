@@ -14,13 +14,13 @@ import com.olink.entity.User;
  作者：chenhao
 *日期： 2025/4/26 下午3:22
 */
-@Component("userController")
+@Component
 @Controller
 @RequestMapping("/user")
 public class UserController {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @GetMapping("/hello")
     public String Hello(@Param("name")String name, @Param("age")Integer age){

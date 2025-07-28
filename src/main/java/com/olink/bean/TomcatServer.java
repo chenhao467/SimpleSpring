@@ -20,7 +20,7 @@ import java.io.File;
 @Data
 public class TomcatServer {
     @Autowired
-    private Servlet dispatcherServlet;
+    private DispatcherServlet dispatcherServlet;
 
     @PostConstruct
     public void start() throws LifecycleException {

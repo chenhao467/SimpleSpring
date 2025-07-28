@@ -14,11 +14,11 @@ import net.sf.cglib.proxy.MethodProxy;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,11 +31,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MyApplicationContext {
     private Class configClass;
-    private ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(); // 一级缓存：单例池，存放完全初始化好的 bean
+    private final Map<String, Object> earlySingletonObjects = new HashMap<>(); // 二级缓存：存放早期 bean 引用
+    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(); // 三级缓存：存放 ObjectFactory，用于延迟创建 bean
     private ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
     private List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
     private List<AspectDefinition> aspectDefinitions = new ArrayList<>(); //存储 Aspect 信息
     private Map<String, List<Method>> preDestroyMethodsMap = new ConcurrentHashMap<>(); //存储destory方法
+    private Map<Class<?>, List<Class<?>>> constructorArgTypesMap = new HashMap<>(); // 临时存储构造器参数类型
 
     public MyApplicationContext(Class configClass) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         this.configClass = configClass;
@@ -77,9 +80,9 @@ public class MyApplicationContext {
                                 }
                             }
 
-
+                            String typeName = clazz.getTypeName();
                             Component annotation = clazz.getDeclaredAnnotation(Component.class);
-                            String beanName = annotation.value();
+                            String beanName = annotation.value().isEmpty() ? typeName.substring(typeName.lastIndexOf(".") + 1):annotation.value();
                             BeanDefinition beanDefinition = new BeanDefinition();
                             beanDefinition.setClazz(clazz);
                             if (clazz.isAnnotationPresent(Scope.class)) {
@@ -89,6 +92,19 @@ public class MyApplicationContext {
                                 beanDefinition.setScope("singleton");
                             }
                             beanDefinitionMap.put(beanName, beanDefinition);
+
+                            // 解析构造器参数类型
+                            List<Class<?>> constructorArgTypes = new ArrayList<>();
+                            for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+                                if (constructor.isAnnotationPresent(Autowired.class)) { // 找到带有 @Autowired 注解的构造器
+                                    for (Parameter parameter : constructor.getParameters()) {
+                                        constructorArgTypes.add(parameter.getType());
+                                    }
+                                    break; // 只处理一个带有 @Autowired 的构造器
+                                }
+                            }
+                            constructorArgTypesMap.put(clazz, constructorArgTypes);
+
 
                             //处理AspectJ
                             if (clazz.isAnnotationPresent(Aspect.class)) {
@@ -115,8 +131,27 @@ public class MyApplicationContext {
 
 
     public Object getBean(String beanName) {
+        // 先从三层缓存里拿
+
+        //判断一级缓存里有没有完备的Bean
         if (singletonObjects.containsKey(beanName))
             return singletonObjects.get(beanName);
+        //如果没有，那么判断二级缓存里有没有早期的半成品Bean
+        if (earlySingletonObjects.containsKey(beanName)) {
+            return earlySingletonObjects.get(beanName);
+        }
+        //如果没有，那么判断三级缓存里有没有工厂Bean
+        if (singletonFactories.containsKey(beanName)) {
+            try {
+                Object bean = singletonFactories.get(beanName).getObject();
+                earlySingletonObjects.put(beanName, bean);
+                singletonFactories.remove(beanName);
+                return bean;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
         BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
         if (beanDefinition == null) {
             throw new NullPointerException();
@@ -128,29 +163,101 @@ public class MyApplicationContext {
 
     public Object createBean(BeanDefinition beanDefinition) {
         Class clazz = beanDefinition.getClazz();
+        String beanName = null;
+        Component annotation = (Component) clazz.getAnnotation(Component.class);
+        if (annotation.value().isEmpty()) {
+            beanName = clazz.getSimpleName();
+        } else {
+            beanName = annotation.value();
+        }
+
+        //默认是Bean的名字，如果Component指定了才是指定值
+
         try {
+            Object instance = null;
+            List<Class<?>> constructorArgTypes = constructorArgTypesMap.get(clazz); // 获取构造器参数类型
 
-            Object instance = clazz.getDeclaredConstructor().newInstance();
+            // 1. 实例化 Bean
+            if (constructorArgTypes != null && !constructorArgTypes.isEmpty()) {
+                // 1. 获取所有构造函数
+                java.lang.reflect.Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+                java.lang.reflect.Constructor<?> autowiredConstructor = null;
 
-            // 提前加入到singleton池子里
-            // 修改单例池注册逻辑，优先读取注解中的名称
-            Component component = (Component) clazz.getAnnotation(Component.class);
-            String value = component.value();
-            String beanName = clazz.isAnnotationPresent(Component.class)
-                    ? value// 读取注解中的名称
-                    : lowerFirstChar(clazz.getSimpleName());
+                // 2. 找到带有 @Autowired 注解的构造函数
+                for (java.lang.reflect.Constructor<?> constructor : constructors) {
+                    if (constructor.isAnnotationPresent(Autowired.class)) {
+                        autowiredConstructor = constructor;
+                        break;
+                    }
+                }
+                if (autowiredConstructor != null) {
 
+                    instance = autowiredConstructor.newInstance();//暂时不进行依赖注入
+
+                } else {
+                    // 如果没有使用Autowired注解，那么默认使用无参构造函数
+                    instance = clazz.getDeclaredConstructor().newInstance();
+                }
+
+            } else {
+                // 如果没有指定构造函数参数，则使用无参构造函数
+                instance = clazz.getDeclaredConstructor().newInstance();
+
+            }
+
+            // 2. 放入三级缓存 (ObjectFactory)
+            Object finalInstance = instance;
+            ObjectFactory<?> singletonFactory = new ObjectFactory<Object>() {
+                @Override
+                public Object getObject() throws Exception {
+                    try {
+                        List<Class<?>> constructorArgTypes2 = constructorArgTypesMap.get(clazz);
+                        java.lang.reflect.Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+                        java.lang.reflect.Constructor<?> autowiredConstructor = null;
+                        Object[] args = null;
+
+                        // 2. 找到带有 @Autowired 注解的构造函数
+                        for (java.lang.reflect.Constructor<?> constructor : constructors) {
+                            if (constructor.isAnnotationPresent(Autowired.class)) {
+                                autowiredConstructor = constructor;
+                                break;
+                            }
+                        }
+                        if (autowiredConstructor != null) {
+                            args = new Object[constructorArgTypes2.size()];
+                            for (int i = 0; i < constructorArgTypes2.size(); i++) {
+                                String dependencyBeanName = lowerFirstChar(constructorArgTypes2.get(i).getSimpleName());
+                                args[i] = getBean(dependencyBeanName);
+                            }
+                            return autowiredConstructor.newInstance(args);
+                        }
+                        return finalInstance;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+
+            singletonFactories.put(beanName, singletonFactory);
+
+            // 3. 从三级缓存中获取 early bean 并放入二级缓存
+
+            instance = getBean(beanName);
             //应用AOP,在放入单例池之前应用
             instance = applyAOP(instance, beanName);
-
-            singletonObjects.put(beanName, instance);
 
 
             //依赖注入
             Object bean = null;
             for (Field declaredField : clazz.getDeclaredFields()) {
                 if (declaredField.isAnnotationPresent(Autowired.class)) {
-                    bean = getBean(declaredField.getName());
+                    Autowired autowired = declaredField.getAnnotation(Autowired.class);
+                    String dependencyBeanName = declaredField.getType().getSimpleName();// 获取依赖的 beanName (根据类型)
+                    //如果Autowired有指定名称，那么按照名称装配
+                    if (null != autowired.value() && !autowired.value().isEmpty()) {
+                        dependencyBeanName = autowired.value();
+                    }
+                    bean = getBean(dependencyBeanName);
                     declaredField.setAccessible(true);
                     declaredField.set(instance, bean);
                 }
@@ -180,7 +287,7 @@ public class MyApplicationContext {
                 // handler:(bean,method)
                 instance = beanPostProcessor.after(instance, beanName);
             }
-
+            singletonObjects.put(beanName, instance);
             return instance;
         } catch (InstantiationException e) {
             e.printStackTrace();
@@ -190,8 +297,6 @@ public class MyApplicationContext {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
         return null;
     }
@@ -216,7 +321,7 @@ public class MyApplicationContext {
         return list;
     }
 
-    private void invokePostConstructMethods(Object instance) throws Exception {
+    private void invokePostConstructMethods(Object instance) throws InvocationTargetException, IllegalAccessException {
         // 获取所有的方法
         Method[] methods = instance.getClass().getDeclaredMethods();
 

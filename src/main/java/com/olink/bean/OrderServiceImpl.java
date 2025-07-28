@@ -14,10 +14,10 @@ import java.sql.ResultSet;
  作者：chenhao
 *日期： 2025/4/26 下午3:34
 */
-@Component("orderService")
+@Component
 public class OrderServiceImpl implements BeanNameAware, InitiallizingBean, OrderService {
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
    public void test(){
        userService.test();

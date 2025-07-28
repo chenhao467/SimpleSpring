@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Component("dispatcherServlet")
+@Component
 public class DispatcherServlet extends HttpServlet implements BeanPostProcessor,Servlet {
 
     public static Map<String, ControllerMethodMapping> handlerMapping = new HashMap<>();

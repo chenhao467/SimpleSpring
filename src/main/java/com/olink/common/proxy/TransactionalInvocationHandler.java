@@ -1,4 +1,4 @@
-package com.olink.common.spring;
+package com.olink.common.proxy;
 
 import com.olink.common.config.ConnectionManager;
 
