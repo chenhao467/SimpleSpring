@@ -1,11 +1,13 @@
 package com.olink.bean;
 
-import com.olink.common.spring.BeanNameAware;
-import com.olink.common.spring.InitiallizingBean;
+import com.olink.common.annotation.Transactional;
+import com.olink.common.spring.*;
 import com.olink.common.annotation.Autowired;
 import com.olink.common.annotation.Component;
-import com.olink.common.spring.OrderService;
-import com.olink.common.spring.UserService;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 /*
 *功能：
@@ -20,6 +22,24 @@ public class OrderServiceImpl implements BeanNameAware, InitiallizingBean, Order
    public void test(){
        userService.test();
    }
+
+    @Override
+    @Transactional
+    public String getUserNameById(String id) {
+        String name = null;
+        try (Connection conn = TransactionManager.getConnection()) {
+            String sql = "SELECT phone FROM truck_user WHERE id = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                name = rs.getString("phone");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return name;
+    }
 
     @Override
     public void setBeanName(String beanName) {

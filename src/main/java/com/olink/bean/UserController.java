@@ -1,6 +1,7 @@
 package com.olink.bean;
 
 import com.olink.common.annotation.*;
+import com.olink.common.annotation.requestMapping.GetMapping;
 import com.olink.common.annotation.requestMapping.PostMapping;
 import com.olink.common.annotation.requestMapping.RequestMapping;
 import com.olink.common.spring.ModelAndView;
@@ -21,11 +22,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @RequestMapping("/hello")
+    @GetMapping("/hello")
     public String Hello(@Param("name")String name, @Param("age")Integer age){
        return String.format("<h1>name:%s age:%s</h1>", name,age);
     }
-    @RequestMapping("/json")
+    @GetMapping("/json")
     @ResponseBody
     public User Json(@Param("name")String name, @Param("age")Integer age){
         User user = new User();
@@ -39,11 +40,12 @@ public class UserController {
         return modelAndView;
     }
 
-    @RequestMapping("/get")
+    @GetMapping("/get")
     public String getUserNameById(@Param("id") String id){
        String name  = userService.getUserNameById(id);
        return name;
     }
+
     @PostMapping("/insert")
     @ResponseBody
     public String AddUser(@RequestBody User user){
