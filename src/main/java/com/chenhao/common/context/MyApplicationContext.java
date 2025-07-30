@@ -69,6 +69,9 @@ public class MyApplicationContext {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (File f : files) {
+                if(f.isDirectory()){
+                    scan(path + "/" + f.getName());
+                }
                 String fileName = f.getAbsolutePath();
                 if (fileName.endsWith(".class")) {
                     String className = fileName.substring(fileName.indexOf("com"), fileName.indexOf(".class"));
