@@ -4,6 +4,7 @@ import com.chenhao.common.config.AppConfig;
 import com.chenhao.common.context.MyApplicationContext;
 
 import java.lang.reflect.InvocationTargetException;
+import java.security.NoSuchAlgorithmException;
 
 /*
 *功能：
@@ -11,9 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 *日期： 2025/4/26 下午1:32
 */
 public class SpringApplication {
-    public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, NoSuchAlgorithmException {
         MyApplicationContext context = null;
-        //try{
            context = new MyApplicationContext(AppConfig.class);
 //        }catch (Exception e) {
 //            context.shutdown();
@@ -21,5 +21,6 @@ public class SpringApplication {
 //        }finally {
 //
 //        }
+
     }
 }

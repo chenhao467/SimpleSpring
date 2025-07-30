@@ -55,7 +55,7 @@ public class MyApplicationContext {
             String beanName = entry.getKey();
             BeanDefinition beandefinition = entry.getValue();
             if (beandefinition.getScope().equals("singleton")) {
-                Object bean = createBean(beandefinition);
+                createBean(beandefinition);
             }
         }
     }
@@ -185,11 +185,11 @@ public class MyApplicationContext {
             // 1. 实例化 Bean
             if (constructorArgTypes != null && !constructorArgTypes.isEmpty()) {
                 // 1. 获取所有构造函数
-                java.lang.reflect.Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-                java.lang.reflect.Constructor<?> autowiredConstructor = null;
+                Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+                Constructor<?> autowiredConstructor = null;
 
                 // 2. 找到带有 @Autowired 注解的构造函数
-                for (java.lang.reflect.Constructor<?> constructor : constructors) {
+                for (Constructor<?> constructor : constructors) {
                     if (constructor.isAnnotationPresent(Autowired.class)) {
                         autowiredConstructor = constructor;
                         break;
@@ -217,12 +217,12 @@ public class MyApplicationContext {
                 public Object getObject() throws Exception {
                     try {
                         List<Class<?>> constructorArgTypes2 = constructorArgTypesMap.get(clazz);
-                        java.lang.reflect.Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-                        java.lang.reflect.Constructor<?> autowiredConstructor = null;
+                        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+                        Constructor<?> autowiredConstructor = null;
                         Object[] args = null;
 
                         // 2. 找到带有 @Autowired 注解的构造函数
-                        for (java.lang.reflect.Constructor<?> constructor : constructors) {
+                        for (Constructor<?> constructor : constructors) {
                             if (constructor.isAnnotationPresent(Autowired.class)) {
                                 autowiredConstructor = constructor;
                                 break;
